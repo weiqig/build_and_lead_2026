@@ -1,0 +1,12 @@
+[project]
+name = "week2"
+version = "0.1.0"
+description = "Build and lead week2 module - AI Component"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "bs4>=0.0.2",
+    "pydantic>=2.13.3",
+    "requests>=2.33.1",
+    "ruff>=0.15.12",
+]
