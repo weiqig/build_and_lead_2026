@@ -24,7 +24,6 @@ class Profiler:
             print(e)
         finally:
             self.data_quality_report()
-            pass
 
     def fetch_data(self) -> None:
         '''
@@ -32,8 +31,8 @@ class Profiler:
         '''
         cursor = self.cursor.execute("SELECT COUNT(*) FROM JOBS")
         self.total = cursor.fetchone()[0]
-        cursor = self.cursor.execute("SELECT AVG(LENGTH(description)) FROM JOBS")
-        self.avg = cursor.fetchone()[0] // 1
+        cursor = self.cursor.execute("SELECT CAST(AVG(LENGTH(description)) AS INT) FROM JOBS")
+        self.avg = cursor.fetchone()[0]
         cursor = self.cursor.execute(
             """
                 SELECT source_id, job_title, LENGTH(description)
@@ -60,8 +59,8 @@ f"""
 ❓ Missing Values -> job_title: 0, company: 0, description: 0
 📝 Avg Description Length: {self.avg} chars
 ⚠️ Shortest Description: {self.min_data[2]} chars
-↳ source_id: {self.min_data[0]} | job_title: {self.min_data[1]}
+    ↳ source_id: {self.min_data[0]} | job_title: {self.min_data[1]}
 🚨 Longest Description: {self.max_data[2]} chars
-↳ source_id: {self.max_data[0]} | job_title: {self.max_data[1]}
+    ↳ source_id: {self.max_data[0]} | job_title: {self.max_data[1]}
 """
 )

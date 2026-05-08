@@ -89,26 +89,22 @@ class Processor:
 
     def extract_source_id(self, soup: BeautifulSoup) -> str | None:
 
-        meta = soup.find("meta", attrs={"name": "original-url"})
-        if meta and meta.get("content"):
-            return meta["content"]
-
         meta = soup.find("meta", attrs={"property": "og:url"})
         if meta and meta.get("content"):
-            return meta["content"]
+            return meta["content"].split("/")[-1]
 
         return None
 
 
     def extract_job_title(self, soup: BeautifulSoup) -> str | None:
 
-        title = soup.find(attrs={"data-automation": "job-detail-title"})
-        if title:
-            return title.get_text(strip=True)
-
         h1 = soup.find("h1")
         if h1:
             return h1.get_text(strip=True)
+
+        title = soup.find(attrs={"data-automation": "job-detail-title"})
+        if title:
+            return title.get_text(strip=True)
 
         return None
 
@@ -128,21 +124,9 @@ class Processor:
 
     def extract_description(self, soup: BeautifulSoup) -> str | None:
 
-        desc = soup.find(attrs={"class": "description"})
-        if desc:
-            return desc.get_text(" ", strip=True)
-
-        meta = soup.find("meta", attrs={"name": "description"})
-        if meta and meta.get("content") and meta["content"] != '-':
-            return meta["content"]
-
-        meta = soup.find("meta", attrs={"property": "og:description"})
-        if meta and meta.get("content") and meta["content"] != '-':
-            return meta["content"]
-
-        meta = soup.find("meta", attrs={"property": "twitter:description"})
-        if meta and meta.get("content") and meta["content"] != '-':
-            return meta["content"]
+        description = soup.find(attrs={"data-automation": "jobAdDetails"})
+        if description:
+            return description.get_text(strip=True)
 
         return None
 
