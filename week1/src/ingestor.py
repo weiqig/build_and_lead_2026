@@ -1,4 +1,3 @@
-from typing_extensions import Optional
 from pathlib import Path
 from email import policy
 from email.parser import BytesParser
@@ -10,7 +9,7 @@ class Ingestor:
     Extracts and decodes job listings from provided
     seed 0_source/*.mhtml files into raw 1_bronze/*.html format.
     '''
-    def __init__(self, process_amount: Optional[int] = None):
+    def __init__(self, process_amount: int | None = None):
         self.process_amount = process_amount
         self.extracted = 0
         self.failed = 0
@@ -65,7 +64,9 @@ class Ingestor:
 
         for part in msg.walk():
             if part.get_content_type() == "text/html":
-                return part.get_content()
+                content = part.get_payload(decode=True)
+                charset = part.get_content_charset() or "utf-8"
+                return content.decode(charset, errors="replace")
 
     def get_results(self) -> None:
         '''
