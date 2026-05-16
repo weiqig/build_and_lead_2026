@@ -1,18 +1,26 @@
+import os
 import json
 import sqlite3
 from pathlib import Path
 
 class Loader:
-    ...
-    def __init__(self):
+    '''
+    Loader class to load json data into database.
+    '''
+    def __init__(self, input_dir: str, output_dir: str):
         self.inserted = 0
         self.skipped = 0
         self.total = 0
-        self.src_dir: Path = Path("data/2_silver")
-        self.database: Path = Path("data/3_gold/jobs.db")
+        self.src_dir: Path = Path(input_dir)
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+        self.database: Path = Path(output_dir) / "jobs.db"
         self.db = None
 
-    def load(self):
+    def load_all_jsons(self):
+        '''
+        Load all json data into the database in jobs.db.
+        '''
         self.initialize()
         print("(week_1) week_1 [week1●] python main.py load")
         print("🥇 Gold:...")
@@ -60,7 +68,7 @@ class Loader:
                                 {', '.join(fields)}
                             )
                             VALUES(
-                                {', '.join(['?'] * len(fields))}
+                                ?, ?, ?, ?
                             )
                     """
             if self.db.execute(query, gold_data).rowcount == 0:
@@ -72,16 +80,6 @@ class Loader:
             self.total += 1
         self.db.commit()
         self.db.close()
-
-    def delete_data(self) -> None:
-        '''
-        Drop and delete the JOBS table.
-        '''
-        if self.db is None:
-            self.db = sqlite3.connect(self.database)
-        self.db.execute("DELETE FROM JOBS")
-        self.db.commit()
-        print("Deleted all data from JOBS table.")
 
     def get_results(self) -> None:
         '''
