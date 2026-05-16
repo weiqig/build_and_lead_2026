@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 from pydantic import BaseModel, Field, model_validator, ValidationInfo, ValidationError
 from bs4 import BeautifulSoup
@@ -5,7 +6,10 @@ from typing_extensions import Self
 
 
 class Processor:
-
+    '''
+    Processor class used in data processing and transformation.
+    Uses pydantic to create a BaseModel class for automatic validation.
+    '''
     class JobListing(BaseModel):
         source_id: str | None = Field(description="Original URL found in the HTML metadata")
         job_title: str | None
@@ -31,14 +35,17 @@ class Processor:
 
             return self
 
-    def __init__(self):
+    def __init__(self, input_dir: str, output_dir: str) -> None:
         self.processed = 0
         self.skipped = 0
         self.total = 0
-        self.src_dir = Path("data/1_bronze")
-        self.out_dir = Path("data/2_silver")
+        self.src_dir = Path(input_dir)
+        self.out_dir = Path(output_dir)
 
-    def process(self):
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+
+    def process_all_html(self):
         print("(week_1) week_1 [week1] python main.py process")
         print("🥈 Silver:...")
 
@@ -47,18 +54,25 @@ class Processor:
             html = path.read_text(encoding="utf-8")
             soup = BeautifulSoup(html, "html.parser")
             try:
-                source_id = self.extract_source_id(soup)
-                job_title = self.extract_job_title(soup)
-                company = self.extract_company(soup)
-                description = self.extract_description(soup)
-                data = {
+                # Extract ID
+                source_id = soup.find("meta", attrs={"property": "og:url"})
+                source_id = source_id["content"].split("/")[-1] if source_id else None
+                # Extract job title
+                title = soup.find(attrs={"data-automation": "job-detail-title"})
+                title = title.get_text(strip=True) if title else None
+                # Extract company
+                company = soup.find(attrs={"data-automation": "advertiser-name"})
+                company = company.get_text(strip=True) if company else None
+                # Extract description
+                description = soup.find(attrs={"data-automation": "jobAdDetails"})
+                description = description.get_text(" ", strip=True) if description else None
+                job = self.JobListing.model_validate(
+                    {
                         'source_id': source_id,
-                        'job_title': job_title,
+                        'job_title': title,
                         'company': company,
                         'description': description
-                    }
-                job = self.JobListing.model_validate(
-                    data,
+                    },
                     context={"filename": filename}
                 )
                 destination = self.out_dir / f"{filename}.json"
@@ -86,61 +100,3 @@ class Processor:
         print("📊 Silver Summary:")
         print(f"Total: {self.total} | Processed: {self.processed} | Skipped: {self.skipped}")
 
-
-    def extract_source_id(self, soup: BeautifulSoup) -> str | None:
-
-        meta = soup.find("meta", attrs={"property": "og:url"})
-        if meta and meta.get("content"):
-            return meta["content"].split("/")[-1]
-
-        return None
-
-
-    def extract_job_title(self, soup: BeautifulSoup) -> str | None:
-
-        h1 = soup.find("h1")
-        if h1:
-            return h1.get_text(strip=True)
-
-        title = soup.find(attrs={"data-automation": "job-detail-title"})
-        if title:
-            return title.get_text(strip=True)
-
-        return None
-
-
-    def extract_company(self, soup: BeautifulSoup) -> str | None:
-
-        company = soup.find(attrs={"data-automation": "advertiser-name"})
-        if company:
-            return company.get_text(strip=True)
-
-        meta = soup.find("meta", attrs={"name": "author"})
-        if meta and meta.get("content"):
-            return meta["content"]
-
-        return None
-
-
-    def extract_description(self, soup: BeautifulSoup) -> str | None:
-
-        description = soup.find(attrs={"data-automation": "jobAdDetails"})
-        if description:
-            return description.get_text(strip=True)
-
-        return None
-
-    def clean(self) -> None:
-        '''
-        Removes all files from specified folder.
-        '''
-        folder = Path(self.out_dir)
-
-        if any(item.is_file() for item in folder.iterdir()):
-            for item in folder.iterdir():
-                if item.is_file():
-                    item.unlink()
-            print(f"Removed all files in {folder}.")
-        else:
-            print("Target folder is empty.")
-            return
