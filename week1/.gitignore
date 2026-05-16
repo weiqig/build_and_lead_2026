@@ -1,0 +1,7 @@
+__pycache__
+data/
+.ruff_cache
+.venv
+
+#WSL Zone Identifier
+.Zone.Identifier
