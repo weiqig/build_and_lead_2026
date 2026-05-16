@@ -2,11 +2,17 @@ import sys
 from src import Ingestor, Processor, Loader, Profiler
 
 def display_help(command_list: list) -> None:
+    '''
+    Display help and list of commands.
+    '''
     print("commands: ", end='')
     print(", ".join(command_list))
 
 
 def main() -> None:
+    '''
+    Execute the program.
+    '''
     command_list =['ingest', 'process', 'clean']
 
     if len(sys.argv) < 2:
@@ -14,52 +20,30 @@ def main() -> None:
         display_help(command_list)
         return
 
-    if len(sys.argv) == 3:
-        if sys.argv[2] and isinstance(sys.argv[2], int):
-            try:
-                process_amount = int(sys.argv[2])
-            except Exception:
-                print("Invalid input. Please enter a valid integer")
-            ingestor = Ingestor(process_amount)
-        else:
-            ingestor = Ingestor()
-    else:
-        ingestor = Ingestor()
-    processor = Processor()
-    loader = Loader()
-    profiler = Profiler()
+    source = "data/0_source"
+    bronze = "data/1_bronze"
+    silver = "data/2_silver"
+    gold = "data/3_gold"
+
+    ingestor = Ingestor(source, bronze)
+    processor = Processor(bronze, silver)
+    loader = Loader(silver, gold)
+    profiler = Profiler(gold)
     command = sys.argv[1]
     match command:
         case 'ingest':
-            ingestor.ingest()
+            ingestor.ingest_all_mhtml()
         case 'process':
-            processor.process()
+            processor.process_all_html()
         case 'load':
-            loader.load()
+            loader.load_all_jsons()
         case 'profile':
-            profiler.profile()
+            profiler.run_data_profile()
         case 'all':
-            ingestor.ingest()
-            processor.process()
-            loader.load()
-            profiler.profile()
-        case 'clean':
-            if len(sys.argv) == 3:
-                match sys.argv[2]:
-                    case '1':
-                        ingestor.clean()
-                    case '2':
-                        processor.clean()
-                    case '3':
-                        loader.delete_data()
-                    case 'all':
-                        ingestor.clean()
-                        processor.clean()
-                        loader.delete_data()
-                    case _:
-                        pass
-            else:
-                ingestor.clean()
+            ingestor.ingest_all_mhtml()
+            processor.process_all_html()
+            loader.load_all_jsons()
+            profiler.run_data_profile()
         case _:
             print("Unknown command:", command)
 
