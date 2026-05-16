@@ -3,19 +3,22 @@ from pathlib import Path
 
 
 class Profiler:
-    def __init__(self) -> None:
+    '''
+    Profiler class to provide information of database data.
+    '''
+    def __init__(self, database: str) -> None:
         self.total: int = 0
         self.avg: int = 0
         self.min_data: list = 0
         self.max_data: list = 0
-        self.database: Path = Path("data/3_gold/jobs.db")
+        self.database: Path = Path(database) / "jobs.db"
         self.db = None
         self.cursor = None
 
-    def profile(self) -> None:
+    def run_data_profile(self) -> None:
         try:
             if not self.database.exists():
-                raise Exception("Database not found")
+                raise Exception("Database not found!")
             else:
                 self.db = sqlite3.connect(self.database)
                 self.cursor = self.db.cursor()
